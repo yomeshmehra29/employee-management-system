@@ -76,89 +76,44 @@ function validateEmployeePayload(payload) {
   };
 }
 
-function getEmployees(req, res) {
-  const search = String(req.query.search || "").trim();
-  const department = String(req.query.department || "").trim();
-  const requestedPage = Math.max(parseInt(req.query.page, 10) || 1, 1);
-  const requestedLimit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
-  const limit = Math.min(requestedLimit, 100);
+async function getEmployees(req, res) {
+  try {
+    const result = await db.listEmployees({
+      search: req.query.search,
+      department: req.query.department,
+      page: req.query.page,
+      limit: req.query.limit
+    });
 
-  const whereClauses = [];
-  const params = [];
-
-  if (search) {
-    whereClauses.push(
-      "(full_name LIKE ? OR email LIKE ? OR department LIKE ? OR job_role LIKE ?)"
-    );
-    const searchPattern = `%${search}%`;
-    params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    return res.json(result);
+  } catch (error) {
+    console.error("Get employees error:", error);
+    return res.status(500).json({ message: "Failed to load employees." });
   }
-
-  if (department) {
-    whereClauses.push("LOWER(department) = LOWER(?)");
-    params.push(department);
-  }
-
-  const whereStatement = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
-
-  const totalResult = db
-    .prepare(`SELECT COUNT(*) AS total FROM employees ${whereStatement}`)
-    .get(...params);
-
-  const totalItems = totalResult.total;
-  const totalPages = Math.max(Math.ceil(totalItems / limit), 1);
-  const page = Math.min(requestedPage, totalPages);
-  const offset = (page - 1) * limit;
-
-  const employees = db
-    .prepare(
-      `
-        SELECT *
-        FROM employees
-        ${whereStatement}
-        ORDER BY updated_at DESC, id DESC
-        LIMIT ? OFFSET ?
-      `
-    )
-    .all(...params, limit, offset);
-
-  // Return department names to keep the filter dropdown in sync with the database.
-  const departments = db
-    .prepare("SELECT DISTINCT department FROM employees ORDER BY department ASC")
-    .all()
-    .map((item) => item.department);
-
-  return res.json({
-    data: employees,
-    departments,
-    pagination: {
-      page,
-      limit,
-      totalItems,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages
-    }
-  });
 }
 
-function getEmployeeById(req, res) {
+async function getEmployeeById(req, res) {
   const employeeId = Number(req.params.id);
 
   if (!Number.isInteger(employeeId) || employeeId <= 0) {
     return res.status(400).json({ message: "Invalid employee ID." });
   }
 
-  const employee = db.prepare("SELECT * FROM employees WHERE id = ?").get(employeeId);
+  try {
+    const employee = await db.getEmployeeById(employeeId);
 
-  if (!employee) {
-    return res.status(404).json({ message: "Employee not found." });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    return res.json(employee);
+  } catch (error) {
+    console.error("Get employee error:", error);
+    return res.status(500).json({ message: "Failed to load employee details." });
   }
-
-  return res.json(employee);
 }
 
-function createEmployee(req, res) {
+async function createEmployee(req, res) {
   const { errors, normalizedEmployee } = validateEmployeePayload(req.body);
 
   if (Object.keys(errors).length > 0) {
@@ -169,43 +124,14 @@ function createEmployee(req, res) {
   }
 
   try {
-    const insert = db.prepare(`
-      INSERT INTO employees (
-        full_name,
-        email,
-        phone,
-        department,
-        job_role,
-        salary,
-        joining_date,
-        status,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `);
-
-    const result = insert.run(
-      normalizedEmployee.full_name,
-      normalizedEmployee.email,
-      normalizedEmployee.phone,
-      normalizedEmployee.department,
-      normalizedEmployee.job_role,
-      normalizedEmployee.salary,
-      normalizedEmployee.joining_date,
-      normalizedEmployee.status
-    );
-
-    const createdEmployee = db
-      .prepare("SELECT * FROM employees WHERE id = ?")
-      .get(result.lastInsertRowid);
+    const createdEmployee = await db.createEmployee(normalizedEmployee);
 
     return res.status(201).json({
       message: "Employee created successfully.",
       employee: createdEmployee
     });
   } catch (error) {
-    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+    if (error.code === "23505" || error.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return res.status(409).json({ message: "An employee with this email already exists." });
     }
 
@@ -214,64 +140,37 @@ function createEmployee(req, res) {
   }
 }
 
-function updateEmployee(req, res) {
+async function updateEmployee(req, res) {
   const employeeId = Number(req.params.id);
 
   if (!Number.isInteger(employeeId) || employeeId <= 0) {
     return res.status(400).json({ message: "Invalid employee ID." });
   }
 
-  const existingEmployee = db.prepare("SELECT * FROM employees WHERE id = ?").get(employeeId);
-
-  if (!existingEmployee) {
-    return res.status(404).json({ message: "Employee not found." });
-  }
-
-  const { errors, normalizedEmployee } = validateEmployeePayload(req.body);
-
-  if (Object.keys(errors).length > 0) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      errors
-    });
-  }
-
   try {
-    const update = db.prepare(`
-      UPDATE employees
-      SET
-        full_name = ?,
-        email = ?,
-        phone = ?,
-        department = ?,
-        job_role = ?,
-        salary = ?,
-        joining_date = ?,
-        status = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
+    const existingEmployee = await db.getEmployeeById(employeeId);
 
-    update.run(
-      normalizedEmployee.full_name,
-      normalizedEmployee.email,
-      normalizedEmployee.phone,
-      normalizedEmployee.department,
-      normalizedEmployee.job_role,
-      normalizedEmployee.salary,
-      normalizedEmployee.joining_date,
-      normalizedEmployee.status,
-      employeeId
-    );
+    if (!existingEmployee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
 
-    const updatedEmployee = db.prepare("SELECT * FROM employees WHERE id = ?").get(employeeId);
+    const { errors, normalizedEmployee } = validateEmployeePayload(req.body);
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        message: "Validation failed.",
+        errors
+      });
+    }
+
+    const updatedEmployee = await db.updateEmployee(employeeId, normalizedEmployee);
 
     return res.json({
       message: "Employee updated successfully.",
       employee: updatedEmployee
     });
   } catch (error) {
-    if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+    if (error.code === "23505" || error.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return res.status(409).json({ message: "An employee with this email already exists." });
     }
 
@@ -280,22 +179,27 @@ function updateEmployee(req, res) {
   }
 }
 
-function deleteEmployee(req, res) {
+async function deleteEmployee(req, res) {
   const employeeId = Number(req.params.id);
 
   if (!Number.isInteger(employeeId) || employeeId <= 0) {
     return res.status(400).json({ message: "Invalid employee ID." });
   }
 
-  const existingEmployee = db.prepare("SELECT * FROM employees WHERE id = ?").get(employeeId);
+  try {
+    const existingEmployee = await db.getEmployeeById(employeeId);
 
-  if (!existingEmployee) {
-    return res.status(404).json({ message: "Employee not found." });
+    if (!existingEmployee) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    await db.deleteEmployee(employeeId);
+
+    return res.json({ message: "Employee deleted successfully." });
+  } catch (error) {
+    console.error("Delete employee error:", error);
+    return res.status(500).json({ message: "Failed to delete employee." });
   }
-
-  db.prepare("DELETE FROM employees WHERE id = ?").run(employeeId);
-
-  return res.json({ message: "Employee deleted successfully." });
 }
 
 module.exports = {

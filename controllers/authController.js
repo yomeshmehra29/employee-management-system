@@ -25,7 +25,7 @@ function saveAdminSession(req, res, admin, message, statusCode = 200) {
   });
 }
 
-function registerAdmin(req, res) {
+async function registerAdmin(req, res) {
   const { email, password, confirmPassword } = req.body;
 
   if (!email || !password) {
@@ -49,30 +49,38 @@ function registerAdmin(req, res) {
     return res.status(400).json({ message: "Password and confirm password must match." });
   }
 
-  const existingAdmin = db
-    .prepare("SELECT id FROM admins WHERE email = ?")
-    .get(normalizedEmail);
+  try {
+    const existingAdmin = await db.findAdminByEmail(normalizedEmail);
 
-  if (existingAdmin) {
-    return res.status(409).json({ message: "An admin account with this email already exists." });
+    if (existingAdmin) {
+      return res
+        .status(409)
+        .json({ message: "An admin account with this email already exists." });
+    }
+
+    const hashedPassword = bcrypt.hashSync(String(password), 10);
+    const createdAdmin = await db.createAdmin(normalizedEmail, hashedPassword);
+
+    return saveAdminSession(
+      req,
+      res,
+      createdAdmin,
+      "Sign up successful. Redirecting...",
+      201
+    );
+  } catch (error) {
+    if (error.code === "23505" || error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      return res
+        .status(409)
+        .json({ message: "An admin account with this email already exists." });
+    }
+
+    console.error("Register admin error:", error);
+    return res.status(500).json({ message: "Unable to create admin account." });
   }
-
-  const hashedPassword = bcrypt.hashSync(String(password), 10);
-  const result = db
-    .prepare(`
-      INSERT INTO admins (email, password, created_at, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `)
-    .run(normalizedEmail, hashedPassword);
-
-  const createdAdmin = db
-    .prepare("SELECT id, email FROM admins WHERE id = ?")
-    .get(result.lastInsertRowid);
-
-  return saveAdminSession(req, res, createdAdmin, "Sign up successful. Redirecting...", 201);
 }
 
-function loginAdmin(req, res) {
+async function loginAdmin(req, res) {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -85,21 +93,24 @@ function loginAdmin(req, res) {
     return res.status(400).json({ message: "Please enter a valid email address." });
   }
 
-  const admin = db
-    .prepare("SELECT id, email, password FROM admins WHERE email = ?")
-    .get(normalizedEmail);
+  try {
+    const admin = await db.findAdminByEmail(normalizedEmail);
 
-  if (!admin) {
-    return res.status(401).json({ message: "Invalid email or password." });
+    if (!admin) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const passwordMatches = bcrypt.compareSync(String(password), admin.password);
+
+    if (!passwordMatches) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    return saveAdminSession(req, res, admin, "Login successful.");
+  } catch (error) {
+    console.error("Login admin error:", error);
+    return res.status(500).json({ message: "Unable to sign in right now." });
   }
-
-  const passwordMatches = bcrypt.compareSync(String(password), admin.password);
-
-  if (!passwordMatches) {
-    return res.status(401).json({ message: "Invalid email or password." });
-  }
-
-  return saveAdminSession(req, res, admin, "Login successful.");
 }
 
 function logoutAdmin(req, res) {
@@ -113,7 +124,7 @@ function logoutAdmin(req, res) {
       return res.status(500).json({ message: "Logout failed. Please try again." });
     }
 
-    res.clearCookie("connect.sid");
+    res.clearCookie("ems.sid");
     return res.json({ message: "Logout successful." });
   });
 }

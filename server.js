@@ -3,7 +3,7 @@ const session = require("express-session");
 const path = require("path");
 const os = require("os");
 
-require("./config/db");
+const db = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
@@ -54,7 +54,7 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", database: db.client });
 });
 
 app.use("/api", (req, res) => {
@@ -85,20 +85,31 @@ function getNetworkUrls(port) {
   return urls;
 }
 
-app.listen(PORT, HOST, () => {
-  const networkUrls = getNetworkUrls(PORT);
-  const localUrl = `http://localhost:${PORT}`;
-
-  // Print both URLs so the app is easy to open locally or from another device.
-  console.log(`Local:   ${localUrl}`);
-
-  if (networkUrls.length > 0) {
-    console.log(`Network: ${networkUrls[0]}`);
-
-    networkUrls.slice(1).forEach((url) => {
-      console.log(`Network: ${url}`);
-    });
-  } else {
-    console.log("Network: No external network interface detected.");
+async function startServer() {
+  try {
+    await db.initializeDatabase();
+  } catch (error) {
+    console.error("Database initialization failed:", error);
+    process.exit(1);
   }
-});
+
+  app.listen(PORT, HOST, () => {
+    const networkUrls = getNetworkUrls(PORT);
+    const localUrl = `http://localhost:${PORT}`;
+
+    // Print both URLs so the app is easy to open locally or from another device.
+    console.log(`Local:   ${localUrl}`);
+
+    if (networkUrls.length > 0) {
+      console.log(`Network: ${networkUrls[0]}`);
+
+      networkUrls.slice(1).forEach((url) => {
+        console.log(`Network: ${url}`);
+      });
+    } else {
+      console.log("Network: No external network interface detected.");
+    }
+  });
+}
+
+startServer();

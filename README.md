@@ -4,7 +4,7 @@ A complete full-stack Employee Management System CRUD app built with:
 
 - Frontend: HTML, CSS, Vanilla JavaScript
 - Backend: Node.js + Express
-- Database: SQLite
+- Database: SQLite locally, PostgreSQL in cloud deployments
 
 ## Features
 
@@ -12,7 +12,7 @@ A complete full-stack Employee Management System CRUD app built with:
 - Default admin user seeded automatically on first run
 - Protected employee routes using session-based authentication
 - Employee Create, Read, Update, Delete
-- SQLite database auto-created with required tables
+- Automatic database bootstrap for both SQLite and PostgreSQL
 - Search by name, email, department, and job role
 - Department filter
 - Pagination on employee list
@@ -77,6 +77,12 @@ employee-management-system/
    - Local: `http://localhost:3000`
    - Network: `http://YOUR_LOCAL_IP:3000`
 
+## Database Modes
+
+- Local development defaults to SQLite at `data/employees.db`
+- If `DATABASE_URL` is set, the app switches automatically to PostgreSQL
+- On first run, the app creates the required tables and seeds the default admin user
+
 ## Development Mode
 
 ```bash
@@ -87,11 +93,19 @@ npm run dev
 
 ### Render Backend
 
-This project includes [render.yaml](./render.yaml) for deploying the Express + SQLite backend on Render.
+This project includes [render.yaml](./render.yaml) for deploying the Express backend on Render.
 
-- The backend uses `SQLITE_DB_PATH` so the database can live on Render's persistent disk.
-- The Blueprint attaches a disk at `/var/data` and stores SQLite at `/var/data/employees.db`.
-- Because SQLite needs persistent storage, the Render service should use a paid plan with a disk attached.
+- The free deployment path uses a hosted PostgreSQL database instead of SQLite.
+- Set `DATABASE_URL` on the Render service to a valid Postgres connection string.
+- The included `render.yaml` keeps `DATABASE_URL` external so you can supply it from Neon, Supabase, or another hosted Postgres provider.
+
+### Free Cloud Database
+
+The current free deployment setup uses Neon Postgres through the Vercel Marketplace.
+
+- Neon provides the hosted PostgreSQL database
+- Render runs the Express backend
+- Vercel serves the static frontend and rewrites `/api/*` to the Render backend
 
 ### Vercel Frontend
 
@@ -135,6 +149,7 @@ GET /api/employees?search=developer&department=Engineering&page=1&limit=10
 ## Notes
 
 - The SQLite database file is created automatically inside the `data` folder on first run.
+- If `DATABASE_URL` is present, PostgreSQL is used instead of SQLite.
 - The default admin user is inserted only if it does not already exist.
 - New admins can create accounts from the sign-up tab on the auth page.
 - Employee API routes require a logged-in admin session.

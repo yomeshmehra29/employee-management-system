@@ -10,3 +10,5 @@ data/*.db-wal
 !data/.gitkeep
 tools/
 render-openapi.json
+
+.env*.local

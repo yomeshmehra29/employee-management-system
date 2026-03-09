@@ -1,23 +1,17 @@
 const bcrypt = require("bcryptjs");
 
-function seedAdmin(db) {
+async function seedAdmin(store) {
   const defaultEmail = "admin@example.com";
   const defaultPassword = "admin123";
 
-  const existingAdmin = db
-    .prepare("SELECT id FROM admins WHERE email = ?")
-    .get(defaultEmail);
+  const existingAdmin = await store.findAdminByEmail(defaultEmail);
 
   if (existingAdmin) {
     return;
   }
 
   const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
-
-  db.prepare(`
-    INSERT INTO admins (email, password, created_at, updated_at)
-    VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-  `).run(defaultEmail, hashedPassword);
+  await store.createAdmin(defaultEmail, hashedPassword);
 
   console.log("Default admin seeded: admin@example.com / admin123");
 }
