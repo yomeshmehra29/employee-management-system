@@ -95,15 +95,12 @@ This project includes [render.yaml](./render.yaml) for deploying the Express + S
 
 ### Vercel Frontend
 
-This project includes [vercel.ts](./vercel.ts) for deploying the frontend from the `public` directory on Vercel.
+This project includes [vercel.json](./vercel.json) for deploying the frontend from the `public` directory on Vercel.
 
+- Vercel is forced to use the `Other` framework preset.
+- The build step is skipped because this frontend is plain HTML, CSS, and JavaScript.
 - Vercel serves the static frontend from `public`.
 - Vercel rewrites `/api/*` requests to the Render backend.
-- Set `RENDER_BACKEND_URL` in Vercel before deploying, for example:
-
-  ```text
-  https://your-render-service.onrender.com
-  ```
 
 ## API Routes
 
