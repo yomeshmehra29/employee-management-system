@@ -1,16 +1,41 @@
+# Define the Render services needed to host the application backend.
 services:
+  # Configure the Node.js web service that serves the API.
   - type: web
+    # Give the deployed service a stable Render name.
     name: employee-management-system-api
+    # Use Render's Node runtime.
     runtime: node
+    # Deploy on Render's free plan.
     plan: free
+    # Install dependencies during the build step.
     buildCommand: npm install
+    # Start the Express server in production.
     startCommand: npm start
+    # Expose a health check endpoint for Render monitoring.
     healthCheckPath: /api/health
+    # Redeploy automatically when new commits are pushed.
     autoDeployTrigger: commit
+    # Define environment variables needed by the deployed service.
     envVars:
+      # Force production mode so secure cookies and production behavior are enabled.
       - key: NODE_ENV
         value: production
+      # Generate a unique session secret inside Render.
       - key: SESSION_SECRET
         generateValue: true
+      # Supply the hosted MongoDB connection string to switch the app to MongoDB mode.
+      - key: MONGODB_URI
+        sync: false
+      # Optionally provide a MongoDB database name when the URI does not already include one.
+      - key: MONGODB_DB_NAME
+        sync: false
+      # Optionally seed the first admin account in a fresh MongoDB database.
+      - key: DEFAULT_ADMIN_EMAIL
+        sync: false
+      # Optionally set the first admin password for a fresh MongoDB database.
+      - key: DEFAULT_ADMIN_PASSWORD
+        sync: false
+      # Keep the existing Postgres URL as an optional fallback when MongoDB is not configured.
       - key: DATABASE_URL
         sync: false

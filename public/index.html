@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Define the character encoding for the page. -->
     <meta charset="UTF-8" />
+    <!-- Make the layout responsive on phones and tablets. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Set the browser tab title for the dashboard page. -->
     <title>Employee Dashboard</title>
+    <!-- Load the shared stylesheet used by the dashboard and auth pages. -->
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body class="app-page">
+    <!-- Header area with the app title and signed-in admin controls. -->
     <header class="topbar">
       <div>
         <span class="eyebrow">Employee Management System</span>
         <h1>Admin Dashboard</h1>
       </div>
 
+      <!-- Show the signed-in admin email and logout action. -->
       <div class="topbar-actions">
         <div class="admin-pill">
           <span>Signed in as</span>
@@ -22,13 +28,16 @@
       </div>
     </header>
 
+    <!-- Main dashboard content wrapper. -->
     <main class="container">
+      <!-- Summary section with stats and the primary add-employee action. -->
       <section class="hero-panel">
         <div>
           <h2>Employee Records</h2>
           <p>Search, filter, add, edit, and remove employee records securely.</p>
         </div>
 
+        <!-- Quick stats about the current employee dataset. -->
         <div class="stats-grid">
           <article class="stat-card">
             <span>Total Employees</span>
@@ -45,7 +54,9 @@
         </div>
       </section>
 
+      <!-- Employee table panel with filters, messages, and pagination. -->
       <section class="panel">
+        <!-- Toolbar for search, department filtering, and page size. -->
         <div class="toolbar">
           <div class="toolbar-group search-group">
             <label for="searchInput">Search</label>
@@ -73,8 +84,10 @@
           </div>
         </div>
 
+        <!-- Banner area for app-level success and error messages. -->
         <div id="appMessage" class="message hidden"></div>
 
+        <!-- Responsive table wrapper for the employee list. -->
         <div class="table-wrapper">
           <table class="employee-table">
             <thead>
@@ -95,11 +108,13 @@
           </table>
         </div>
 
+        <!-- Empty-state shown when the current filter returns no employees. -->
         <div id="emptyState" class="empty-state hidden">
           <h3>No employees found</h3>
           <p>Try changing the search, department filter, or add a new employee.</p>
         </div>
 
+        <!-- Pagination controls for moving between employee pages. -->
         <div class="pagination">
           <button class="btn btn-secondary" id="prevPageButton">Previous</button>
           <span id="paginationInfo">Page 1 of 1</span>
@@ -108,8 +123,10 @@
       </section>
     </main>
 
+    <!-- Modal used for both creating and editing employee records. -->
     <div class="modal hidden" id="employeeModal" aria-hidden="true">
       <div class="modal-card">
+        <!-- Modal header with a dynamic title and close button. -->
         <div class="modal-header">
           <div>
             <h2 id="modalTitle">Add Employee</h2>
@@ -120,11 +137,15 @@
           </button>
         </div>
 
+        <!-- Banner area for form-specific success and error messages. -->
         <div id="formMessage" class="message hidden"></div>
 
+        <!-- Employee add/edit form. -->
         <form id="employeeForm" novalidate>
+          <!-- Hidden field that stores the employee ID during edits. -->
           <input type="hidden" id="employeeId" name="employeeId" />
 
+          <!-- Grid layout for all editable employee fields. -->
           <div class="form-grid">
             <div class="form-group">
               <label for="full_name">Full Name</label>
@@ -179,6 +200,7 @@
             </div>
           </div>
 
+          <!-- Modal action buttons for canceling or saving. -->
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" id="cancelModalButton">Cancel</button>
             <button type="submit" class="btn btn-primary" id="saveEmployeeButton">
@@ -189,6 +211,7 @@
       </div>
     </div>
 
+    <!-- Load the dashboard client-side logic after the markup. -->
     <script src="/js/app.js"></script>
   </body>
 </html>

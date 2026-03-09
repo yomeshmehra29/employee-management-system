@@ -1,26 +1,49 @@
 # Employee Management System
 
-A complete full-stack Employee Management System CRUD app built with:
+A full-stack Employee Management System built with:
 
 - Frontend: HTML, CSS, Vanilla JavaScript
 - Backend: Node.js + Express
-- Database: SQLite locally, PostgreSQL in cloud deployments
+- Database:
+  - MongoDB when `MONGODB_URI` is configured
+  - SQLite for local development
+  - PostgreSQL as a hosted fallback when MongoDB is not configured
 
-## Features
+For a manager-friendly explanation of the project, see [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md).
+For a call-ready code walkthrough you can explain verbally, see [MANAGER_CALL_GUIDE.md](./MANAGER_CALL_GUIDE.md).
+For MongoDB deployment and data-management steps, see [MONGODB_DEPLOY_AND_DATA_GUIDE.md](./MONGODB_DEPLOY_AND_DATA_GUIDE.md).
 
-- Admin sign up and login authentication with hashed passwords
-- Default admin user seeded automatically on first run
-- Protected employee routes using session-based authentication
-- Employee Create, Read, Update, Delete
-- Automatic database bootstrap for both SQLite and PostgreSQL
+## What This Project Does
+
+This system allows an admin to securely manage employee records from a single web dashboard.
+
+The admin can:
+
+- Sign up
+- Sign in
+- View employees
+- Add employees
+- Edit employees
+- Delete employees
+- Search employees
+- Filter employees by department
+- Browse employees with pagination
+
+## Key Features
+
+- Admin authentication with password hashing
+- Protected employee routes
+- Employee CRUD operations
 - Search by name, email, department, and job role
-- Department filter
-- Pagination on employee list
-- Responsive modern UI
-- Frontend and backend form validation
-- Edit form preloads existing employee data
-- Delete confirmation before removal
-- Runs on `0.0.0.0` and prints both localhost and network URLs
+- Department filtering
+- Pagination
+- Responsive UI
+- Frontend and backend validation
+- Preloaded edit form
+- Delete confirmation
+- Automatic database setup on first run
+- Default admin seeding
+- Runs on `0.0.0.0` and prints both local and network URLs
 
 ## Default Admin Login
 
@@ -31,32 +54,51 @@ A complete full-stack Employee Management System CRUD app built with:
 
 ```text
 employee-management-system/
-├── config/
-│   └── db.js
-├── controllers/
-│   ├── authController.js
-│   └── employeeController.js
-├── data/
-│   └── employees.db
-├── middleware/
-│   └── auth.js
-├── public/
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   ├── app.js
-│   │   └── login.js
-│   ├── index.html
-│   └── login.html
-├── routes/
-│   ├── authRoutes.js
-│   └── employeeRoutes.js
-├── utils/
-│   └── seedAdmin.js
-├── package.json
-├── README.md
-└── server.js
+|-- config/
+|   `-- db.js
+|-- controllers/
+|   |-- authController.js
+|   `-- employeeController.js
+|-- data/
+|   `-- employees.db
+|-- middleware/
+|   `-- auth.js
+|-- public/
+|   |-- css/
+|   |   `-- style.css
+|   |-- js/
+|   |   |-- app.js
+|   |   `-- login.js
+|   |-- index.html
+|   `-- login.html
+|-- routes/
+|   |-- authRoutes.js
+|   `-- employeeRoutes.js
+|-- utils/
+|   `-- seedAdmin.js
+|-- PROJECT_OVERVIEW.md
+|-- package.json
+|-- README.md
+|-- render.yaml
+|-- server.js
+`-- vercel.json
 ```
+
+## How It Works
+
+### Local Development
+
+- The app uses MongoDB when `MONGODB_URI` is available
+- Otherwise it uses SQLite by default
+- The SQLite database file is stored at `data/employees.db`
+- This makes local setup simple and beginner-friendly
+
+### Cloud Deployment
+
+- When `MONGODB_URI` is set, the app automatically switches to MongoDB
+- If MongoDB is not configured, `DATABASE_URL` keeps the existing PostgreSQL path
+- The frontend is hosted on Vercel
+- The backend is hosted on Render
 
 ## Setup
 
@@ -77,44 +119,89 @@ employee-management-system/
    - Local: `http://localhost:3000`
    - Network: `http://YOUR_LOCAL_IP:3000`
 
-## Database Modes
-
-- Local development defaults to SQLite at `data/employees.db`
-- If `DATABASE_URL` is set, the app switches automatically to PostgreSQL
-- On first run, the app creates the required tables and seeds the default admin user
-
 ## Development Mode
 
 ```bash
 npm run dev
 ```
 
-## Deployment
+## Database Modes
 
-### Render Backend
+The project supports three database modes.
 
-This project includes [render.yaml](./render.yaml) for deploying the Express backend on Render.
+### MongoDB Mode
 
-- The free deployment path uses a hosted PostgreSQL database instead of SQLite.
-- Set `DATABASE_URL` on the Render service to a valid Postgres connection string.
-- The included `render.yaml` keeps `DATABASE_URL` external so you can supply it from Neon, Supabase, or another hosted Postgres provider.
+Used when `MONGODB_URI` is set.
 
-### Free Cloud Database
+- Document database mode
+- Best option when you want to inspect collections in MongoDB Atlas or Compass
+- Employee IDs become MongoDB ObjectIds internally
+- Current controllers and frontend still work with the same API shape
 
-The current free deployment setup uses Neon Postgres through the Vercel Marketplace.
+### SQLite Mode
 
-- Neon provides the hosted PostgreSQL database
-- Render runs the Express backend
-- Vercel serves the static frontend and rewrites `/api/*` to the Render backend
+Used when neither `MONGODB_URI` nor `DATABASE_URL` is set.
 
-### Vercel Frontend
+- Local file database
+- Stored in `data/employees.db`
+- Good for development and testing
 
-This project includes [vercel.json](./vercel.json) for deploying the frontend from the `public` directory on Vercel.
+### PostgreSQL Mode
 
-- Vercel is forced to use the `Other` framework preset.
-- The build step is skipped because this frontend is plain HTML, CSS, and JavaScript.
-- Vercel serves the static frontend from `public`.
-- Vercel rewrites `/api/*` requests to the Render backend.
+Used when `DATABASE_URL` is set and `MONGODB_URI` is not set.
+
+- Hosted cloud database
+- Available as a fallback deployment option
+
+## Deployment Architecture
+
+### Frontend
+
+- Hosted on Vercel
+- Serves static files from `public`
+- Rewrites `/api/*` requests to the Render backend
+
+### Backend
+
+- Hosted on Render
+- Runs the Express API
+- Connects to MongoDB when `MONGODB_URI` is configured
+- Falls back to Postgres when only `DATABASE_URL` is configured
+
+### Database
+
+- Hosted on Neon in cloud deployment
+- Persistent and free for the current project setup
+
+## Deployment Files
+
+### Render
+
+[render.yaml](./render.yaml) contains the Render service definition.
+
+- Free web service
+- Node runtime
+- `MONGODB_URI` supported for MongoDB deployment
+- `DATABASE_URL` supplied externally
+- `SESSION_SECRET` generated by Render
+
+### Vercel
+
+[vercel.json](./vercel.json) configures the frontend deployment.
+
+- Forces the `Other` framework preset
+- Skips the build step
+- Serves `public`
+- Rewrites API requests to the Render backend
+
+## Authentication
+
+The app uses session-based authentication.
+
+- Admin passwords are hashed using `bcryptjs`
+- Login creates an authenticated session
+- Protected routes require a logged-in admin
+- Logout destroys the session
 
 ## API Routes
 
@@ -146,10 +233,38 @@ Example:
 GET /api/employees?search=developer&department=Engineering&page=1&limit=10
 ```
 
+## Employee Fields
+
+- `id`
+- `full_name`
+- `email`
+- `phone`
+- `department`
+- `job_role`
+- `salary`
+- `joining_date`
+- `status`
+- `created_at`
+- `updated_at`
+
 ## Notes
 
-- The SQLite database file is created automatically inside the `data` folder on first run.
-- If `DATABASE_URL` is present, PostgreSQL is used instead of SQLite.
-- The default admin user is inserted only if it does not already exist.
-- New admins can create accounts from the sign-up tab on the auth page.
-- Employee API routes require a logged-in admin session.
+- The database tables are created automatically on first run
+- The default admin is seeded automatically if missing
+- Frontend and backend both validate user input
+- MongoDB can be enabled without changing the frontend routes
+- SQLite still keeps local development simple when MongoDB is not configured
+- PostgreSQL remains available as a fallback when MongoDB is not configured
+
+## Suggested Demo Order
+
+1. Open the login page
+2. Show sign up and sign in
+3. Log in as admin
+4. Show the dashboard
+5. Create an employee
+6. Search for the employee
+7. Filter by department
+8. Edit the employee
+9. Delete the employee
+10. Explain that the data is stored in the database and protected by authentication
