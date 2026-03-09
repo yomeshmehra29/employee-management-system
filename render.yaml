@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: employee-management-system-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SQLITE_DB_PATH
+        value: /var/data/employees.db
+    disk:
+      name: employee-management-data
+      mountPath: /var/data
+      sizeGB: 1

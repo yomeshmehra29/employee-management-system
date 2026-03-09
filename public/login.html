@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Access | Employee Management System</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body class="auth-page">
+    <div class="auth-layout">
+      <section class="auth-copy">
+        <span class="eyebrow">Employee Management System</span>
+        <h1>Manage your team from one clean dashboard.</h1>
+        <p>
+          Create an admin account or sign in to manage employees, update records,
+          filter departments, and keep staff data organized in a local SQLite database.
+        </p>
+
+        <div class="default-credentials">
+          <h2>Default Admin</h2>
+          <p><strong>Email:</strong> admin@example.com</p>
+          <p><strong>Password:</strong> admin123</p>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <div class="card-header">
+          <h2 id="authTitle">Admin Sign In</h2>
+          <p id="authDescription">
+            Use the seeded account or sign in with an existing admin account.
+          </p>
+        </div>
+
+        <div class="auth-toggle" aria-label="Authentication mode switch">
+          <button type="button" class="toggle-button active" data-mode="signin">
+            Sign In
+          </button>
+          <button type="button" class="toggle-button" data-mode="signup">
+            Sign Up
+          </button>
+        </div>
+
+        <div id="loginMessage" class="message hidden"></div>
+
+        <form id="authForm" novalidate>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="admin@example.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <div class="form-group hidden" id="confirmPasswordGroup">
+            <label for="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+            />
+          </div>
+
+          <p class="auth-helper" id="authHelperText">
+            New admin? Switch to sign up to create your account.
+          </p>
+
+          <button type="submit" class="btn btn-primary btn-block" id="authButton">
+            Sign In
+          </button>
+        </form>
+      </section>
+    </div>
+
+    <script src="/js/login.js"></script>
+  </body>
+</html>
