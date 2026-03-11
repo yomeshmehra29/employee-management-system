@@ -19,6 +19,8 @@ const db = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 // Import employee CRUD API routes.
 const employeeRoutes = require("./routes/employeeRoutes");
+// Import chatbot API routes.
+const chatbotRoutes = require("./routes/chatbotRoutes");
 
 // Create the Express application instance.
 const app = express();
@@ -67,6 +69,8 @@ app.use(
 app.use("/api/auth", authRoutes);
 // Mount employee management APIs under /api/employees.
 app.use("/api/employees", employeeRoutes);
+// Mount chatbot APIs under /api/chatbot.
+app.use("/api/chatbot", chatbotRoutes);
 // Serve static frontend files from the public directory.
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 

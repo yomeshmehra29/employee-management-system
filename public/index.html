@@ -211,7 +211,52 @@
       </div>
     </div>
 
+    <!-- Floating AI assistant for the dashboard. -->
+    <div class="chatbot-widget" aria-live="polite">
+      <button class="chatbot-toggle" id="chatbotToggle" aria-expanded="false">
+        EMS Assistant
+      </button>
+
+      <div class="chatbot-panel" id="chatbotPanel" role="dialog" aria-label="EMS Assistant">
+        <div class="chatbot-header">
+          <div>
+            <span class="chatbot-eyebrow">AI Assistant</span>
+            <h3>EMS Helper</h3>
+            <p>Guidance, navigation tips, and quick answers.</p>
+          </div>
+          <div class="chatbot-actions">
+            <button class="chatbot-action" id="chatbotClear" type="button">Clear</button>
+            <button class="chatbot-action chatbot-close" id="chatbotClose" type="button" aria-label="Close assistant">
+              &times;
+            </button>
+          </div>
+        </div>
+
+        <div class="chatbot-messages" id="chatbotMessages" role="log" aria-live="polite"></div>
+
+        <div class="chatbot-suggestions" id="chatbotSuggestions">
+          <button class="chatbot-chip" data-message="Add Employee" type="button">Add Employee</button>
+          <button class="chatbot-chip" data-message="Search employees" type="button">Search Employees</button>
+          <button class="chatbot-chip" data-message="Check attendance" type="button">Check Attendance</button>
+          <button class="chatbot-chip" data-message="Payroll help" type="button">Payroll Help</button>
+          <button class="chatbot-chip" data-message="Update profile" type="button">Update Profile</button>
+          <button class="chatbot-chip" data-message="Reports" type="button">Reports</button>
+        </div>
+
+        <form class="chatbot-input" id="chatbotForm">
+          <input
+            type="text"
+            id="chatbotInput"
+            placeholder="Ask about employees, leave, payroll, or navigation..."
+            autocomplete="off"
+          />
+          <button class="chatbot-send" type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+
     <!-- Load the dashboard client-side logic after the markup. -->
     <script src="/js/app.js"></script>
+    <script src="/js/chatbot.js"></script>
   </body>
 </html>
